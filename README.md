@@ -8,7 +8,7 @@ node.js >= 8
 
 ## 使用
 
-yarn
+~~yarn~~
 
 ```shell
 yarn create react-storybook my-react-component
