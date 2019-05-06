@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "bin": {
-    "crs": "./scripts/index.js"
+    "create-react-storybook": "./scripts/index.js"
   },
   "directories": {
     "doc": "docs"
