@@ -4,6 +4,9 @@ const fs = require('fs-extra');
 const validateProjectName = require('validate-npm-package-name');
 const commander = require('commander');
 const envinfo = require('envinfo');
+const path = require('path');
+const jsonfile = require('jsonfile');
+const spawn = require('cross-spawn');
 
 const packageJson = require('../package.json');
 
@@ -55,15 +58,69 @@ if (typeof projectName === 'undefined') {
   process.exit(1);
 }
 
-create(projectName, program.verbose);
+function printValidationResults(results) {
+  if (typeof results !== 'undefined') {
+    results.forEach(error => {
+      console.error(chalk.red(`  *  ${error}`));
+    });
+  }
+}
 
-function create(projectName, verbose) {
-  const root = path.resolve(name);
-  const appName = path.basename(root);
-
-  checkAppName(appName);
-  fs.ensureDirSync(name);
-  if (!isSafeToCreateProjectIn(root, name)) {
+function checkAppName(appName) {
+  const validationResult = validateProjectName(appName);
+  if (!validationResult.validForNewPackages) {
+    console.error(
+      `Could not create a project called ${chalk.red(
+        `"${appName}"`
+      )} because of npm naming restrictions:`
+    );
+    printValidationResults(validationResult.errors);
+    printValidationResults(validationResult.warnings);
     process.exit(1);
   }
+
+  // TODO: there should be a single place that holds the dependencies
+  const dependencies = ['react', 'react-dom', 'react-scripts'].sort();
+  if (dependencies.indexOf(appName) >= 0) {
+    console.error(
+      chalk.red(
+        `We cannot create a project called ${chalk.green(
+          appName
+        )} because a dependency with the same name exists.\n` +
+          `Due to the way npm works, the following names are not allowed:\n\n`
+      ) +
+        chalk.cyan(dependencies.map(depName => `  ${depName}`).join('\n')) +
+        chalk.red('\n\nPlease choose a different project name.')
+    );
+    process.exit(1);
+  }
+}
+
+create(projectName, program.verbose);
+
+function create(name, verbose) {
+  const destDirPath = path.resolve(process.cwd(), name);
+
+  const dirPath = path.resolve(__dirname, '..', 'template');
+
+  checkAppName(name);
+
+  // copy files
+  fs.copySync(dirPath, destDirPath);
+
+  const packageJsonFile = path.resolve(destDirPath, 'package.json');
+
+  const packageJsonFileContent = jsonfile.readFileSync(packageJsonFile);
+
+  packageJsonFileContent.name = name;
+
+  jsonfile.writeFileSync(packageJsonFile, packageJsonFileContent, {
+    spaces: 2
+  });
+
+  // install
+  spawn.sync('yarn', [], {
+    cwd: path.resolve(destDirPath),
+    stdio: 'inherit'
+  });
 }
