@@ -8,16 +8,14 @@ node.js >= 8
 
 ## 使用
 
-~~yarn~~
-
-```shell
-yarn create react-storybook my-react-component
-```
-
 npm
 
 ```shell
 npx create-react-storybook my-react-component
 ```
+
+## bug
+
+- 未生成 .gitignore 文件
 
 ## 未完待续...
