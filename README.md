@@ -17,5 +17,6 @@ npx create-react-storybook my-react-component
 ## bug
 
 - 未生成 .gitignore 文件
+- 生成的 package.json 文件中没有 author/repository/bugs/homepage 字段
 
 ## 未完待续...
